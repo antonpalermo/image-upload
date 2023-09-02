@@ -1,6 +1,9 @@
+import dotenv from 'dotenv'
 import express, { Application, Router } from "express";
 
 import productsRoute from "./routers/products";
+
+dotenv.config()
 
 async function main() {
   const app: Application = express();
