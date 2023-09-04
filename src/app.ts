@@ -1,9 +1,10 @@
 import dotenv from "dotenv";
+
+dotenv.config();
+
 import express, { Application, Router } from "express";
 
 import productsRoute from "./routers/products";
-
-dotenv.config();
 
 async function main() {
   // express application
