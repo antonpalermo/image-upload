@@ -1,30 +1,19 @@
-import Busboy from "busboy";
 import express, { Request, Response, Router } from "express";
+import multer from "multer";
 
 const router: Router = express.Router();
 
-router.post("/:storeId/upload", (req: Request, res: Response) => {
-  const busboy = Busboy({ headers: req.headers });
+const upload = multer();
 
-  busboy.on("file", (name, file, info) => {
-    console.log("sample", name, file, info);
+router.post(
+  "/:storeId/upload",
+  upload.single("image"),
+  (req: Request, res: Response) => {
 
-    file.on("data", (chunk) => {
-      console.log("chunk", chunk);
-    });
+    console.log(req.file)
 
-    file.on("close", () => {
-      console.log(`file ${name} done`);
-    });
-  });
-
-  busboy.on('close', () => {
-    console.log('done parsing form')
-  })
-
-  req.pipe(busboy)
-
-  return res.status(201).json({ message: "okay" });
-});
+    return res.status(201).json({ message: "okay" });
+  }
+);
 
 export default router;
