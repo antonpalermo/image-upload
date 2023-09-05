@@ -1,8 +1,10 @@
-import express, { Request, Response, Router } from "express";
+import express, { NextFunction, Request, Response, Router } from "express";
+
+import { S3Client } from "@aws-sdk/client-s3";
+import { validateBufferMIMEType } from "validate-image-type";
 
 import multer from "multer";
 import multerS3 from "multer-s3";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 const router: Router = express.Router();
 
@@ -14,20 +16,34 @@ const s3Client = new S3Client({
   },
 });
 
+router.use(multer().single("image"));
+
+async function verifyUploadedFile(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  if (req.file) {
+    console.log("sample", req.file);
+    const isValid = await validateBufferMIMEType(req.file?.buffer, {
+      originalFilename: req.file.originalname,
+      allowMimeTypes: ["image/png", "image/jpeg"],
+    });
+
+    if (!isValid.ok) {
+      return res.status(400).json({ message: "invalid uploaded image" });
+    }
+  } else {
+    return res.status(400).json({ message: "please upload a file." });
+  }
+
+  next();
+}
+
 router.post(
   "/:storeId/upload",
-  multer().single("image"),
+  verifyUploadedFile,
   async (req: Request, res: Response) => {
-    const s3Params = {
-      Bucket: process.env.AWS_BUCKET_NAME,
-      Key: `screenshots/${req.file?.originalname}`,
-      Body: req.file?.buffer,
-      ContentType: req.file?.mimetype,
-    };
-
-    const command = new PutObjectCommand(s3Params);
-    await s3Client.send(command);
-
     return res.status(201).json({ message: "okay" });
   }
 );
