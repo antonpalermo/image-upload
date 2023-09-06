@@ -5,6 +5,7 @@ import { validateBufferMIMEType } from "validate-image-type";
 
 import multer from "multer";
 import multerS3 from "multer-s3";
+import checkImageBuffer from "../middlewares/check-image-buffer";
 
 const router: Router = express.Router();
 
@@ -18,31 +19,9 @@ const s3Client = new S3Client({
 
 router.use(multer().single("image"));
 
-async function verifyUploadedFile(
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
-  if (req.file) {
-    console.log("sample", req.file);
-    const isValid = await validateBufferMIMEType(req.file?.buffer, {
-      originalFilename: req.file.originalname,
-      allowMimeTypes: ["image/png", "image/jpeg"],
-    });
-
-    if (!isValid.ok) {
-      return res.status(400).json({ message: "invalid uploaded image" });
-    }
-  } else {
-    return res.status(400).json({ message: "please upload a file." });
-  }
-
-  next();
-}
-
 router.post(
   "/:storeId/upload",
-  verifyUploadedFile,
+  checkImageBuffer,
   async (req: Request, res: Response) => {
     return res.status(201).json({ message: "okay" });
   }
