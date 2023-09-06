@@ -7,7 +7,6 @@ export default async function checkImageBuffer(
   next: NextFunction
 ) {
   if (req.file) {
-    console.log("sample", req.file);
     const isValid = await validateBufferMIMEType(req.file?.buffer, {
       originalFilename: req.file.originalname,
       allowMimeTypes: ["image/png", "image/jpeg"],
