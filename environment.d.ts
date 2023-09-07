@@ -6,6 +6,7 @@ declare global {
       AWS_BUCKET_REGION: string;
       AWS_BUCKET_ACCESSKEY: string;
       AWS_BUCKET_SECRETKEY: string;
+      NANO_ID: string;
       PORT?: number;
     }
   }
