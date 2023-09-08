@@ -23,6 +23,9 @@ dependencies:
   multer-s3:
     specifier: ^3.0.1
     version: 3.0.1(@aws-sdk/client-s3@3.405.0)
+  nanoid:
+    specifier: ^4.0.2
+    version: 4.0.2
   sharp:
     specifier: ^0.32.5
     version: 0.32.5
@@ -1740,6 +1743,12 @@ packages:
       object-assign: 4.1.1
       type-is: 1.6.18
       xtend: 4.0.2
+    dev: false
+
+  /nanoid@4.0.2:
+    resolution: {integrity: sha512-7ZtY5KTCNheRGfEFxnedV5zFiORN1+Y1N6zvPTnHQd8ENUvfaDBeuJDZb2bN/oXwXxu3qkTXDzy57W5vAmDTBw==}
+    engines: {node: ^14 || ^16 || >=18}
+    hasBin: true
     dev: false
 
   /napi-build-utils@1.0.2:
