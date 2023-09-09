@@ -15,7 +15,7 @@ import multerS3 from "multer-s3";
 
 import checkImageBuffer from "../middlewares/check-image-buffer";
 import processImageBuffer from "../middlewares/process-image-buffer";
-import { generateId } from "../libs/generate-id";
+import { generateFilename } from "../libs/generate-filename";
 
 const router: Router = express.Router();
 
@@ -34,16 +34,10 @@ router.post(
   checkImageBuffer,
   processImageBuffer,
   async (req: Request, res: Response) => {
-    const uploadedFile = await sharp(req.file?.buffer)
-      .resize({ width: 500, height: 500 })
-      .toFormat("webp", { lossless: true })
-      .withMetadata()
-      .toBuffer({ resolveWithObject: true });
-
     const params: PutObjectCommandInput = {
       Bucket: process.env.AWS_BUCKET_NAME,
-      Key: `sample/${generateId}.${uploadedFile.info.format}`,
-      Body: uploadedFile.data,
+      Key: `sample/${generateFilename}.webp`,
+      Body: req.file?.buffer,
       ContentType: "image/webp",
     };
 
