@@ -1,20 +1,15 @@
-import express, { NextFunction, Request, Response, Router } from "express";
+import express, { Request, Response, Router } from "express";
 
 import {
+  S3Client,
   PutObjectCommand,
   PutObjectCommandInput,
-  S3Client,
-  UploadPartCommand,
-  UploadPartCommandInput,
 } from "@aws-sdk/client-s3";
-import { validateBufferMIMEType } from "validate-image-type";
-
-import sharp from "sharp";
 import multer from "multer";
-import multerS3 from "multer-s3";
 
 import checkImageBuffer from "../middlewares/check-image-buffer";
-import processImageBuffer from "../middlewares/process-image-buffer";
+import resizeImage from "../middlewares/resize-image";
+
 import { generateFilename } from "../libs/generate-filename";
 
 const router: Router = express.Router();
@@ -32,7 +27,7 @@ router.use(multer().single("image"));
 router.post(
   "/:storeId/upload",
   checkImageBuffer,
-  processImageBuffer,
+  resizeImage,
   async (req: Request, res: Response) => {
     const params: PutObjectCommandInput = {
       Bucket: process.env.AWS_BUCKET_NAME,

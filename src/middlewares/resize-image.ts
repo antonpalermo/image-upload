@@ -3,7 +3,7 @@ import { MulterError } from "multer";
 
 import sharp from "sharp";
 
-export default async function processImageBuffer(
+export default async function resizeImage(
   req: Request,
   res: Response,
   next: NextFunction
