@@ -73,7 +73,7 @@ router.post(
       // setup s3 upload parameters
       const params: PutObjectCommandInput = {
         Bucket: process.env.AWS_BUCKET_NAME,
-        Key: filename(),
+        Key: filename,
         Body: req.file?.buffer,
         ContentType: "image/webp",
       };
@@ -82,7 +82,7 @@ router.post(
       // send upload command to s3
       await s3Client.send(uploadCommand);
       // store the filename assigned to the uploaded image
-      await prisma.images.create({ data: { name: filename() } });
+      await prisma.images.create({ data: { name: filename } });
       // return created status
       return res.status(201).json({ message: "image successfully uploaded." });
     } catch (e) {
