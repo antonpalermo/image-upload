@@ -2,12 +2,11 @@ import multer from "multer";
 import express, { Request, Response, Router } from "express";
 import {
   S3Client,
-  GetObjectCommand,
   PutObjectCommand,
-  GetObjectCommandInput,
   PutObjectCommandInput,
 } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { getSignedUrl, CloudfrontSignInput } from "@aws-sdk/cloudfront-signer";
+import { Buffer } from "buffer";
 
 import prisma from "../libs/prisma";
 import resizeImage from "../middlewares/resize-image";
@@ -41,19 +40,28 @@ router.get("/:storeId/images", async (req: Request, res: Response) => {
 
     try {
       for (const image of images) {
-        const params: GetObjectCommandInput = {
-          Bucket: process.env.AWS_BUCKET_NAME,
-          Key: image.name,
+        const url = `${process.env.CLOUDFRONT_ORIGIN}/${image.name}`;
+        const privateKey = Buffer.from(
+          process.env.CLOUDFRONT_PRIVATE_KEY,
+          "base64"
+        ).toString("ascii");
+
+        const params: CloudfrontSignInput = {
+          url,
+          keyPairId: process.env.CLOUDFRONT_KEY_ID,
+          privateKey,
+          dateLessThan: new Date(
+            Date.now() + 1000 * 60 * 60 * 24
+          ).toISOString(),
         };
-        const command = new GetObjectCommand(params);
-        const signedURL = await getSignedUrl(s3Client, command, {
-          expiresIn: 3600,
-        });
+
+        const signedURL = getSignedUrl(params);
         image.url = signedURL;
       }
 
       return res.status(200).json(images);
     } catch (e) {
+      console.log(e);
       return res
         .status(500)
         .json({ message: "unable to generate signed urls" });
