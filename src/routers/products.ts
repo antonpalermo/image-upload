@@ -5,14 +5,13 @@ import {
   PutObjectCommand,
   PutObjectCommandInput,
 } from "@aws-sdk/client-s3";
-import { getSignedUrl, CloudfrontSignInput } from "@aws-sdk/cloudfront-signer";
-import { Buffer } from "buffer";
 
 import prisma from "../libs/prisma";
 import resizeImage from "../middlewares/resize-image";
 import checkImageBuffer from "../middlewares/check-image-buffer";
 
 import { generateFilename } from "../libs/generate-filename";
+import { fetchImages } from "../handlers/fetch-images";
 
 const router: Router = express.Router();
 
@@ -26,50 +25,7 @@ const s3Client = new S3Client({
 
 router.use(multer().single("image"));
 
-type Image = {
-  name: string;
-  url?: string;
-};
-
-router.get("/:storeId/images", async (req: Request, res: Response) => {
-  try {
-    // will only return array of image names.
-    const images: Image[] = await prisma.images.findMany({
-      select: { name: true },
-    });
-
-    try {
-      for (const image of images) {
-        const url = `${process.env.CLOUDFRONT_ORIGIN}/${image.name}`;
-        const privateKey = Buffer.from(
-          process.env.CLOUDFRONT_PRIVATE_KEY,
-          "base64"
-        ).toString("ascii");
-
-        const params: CloudfrontSignInput = {
-          url,
-          keyPairId: process.env.CLOUDFRONT_KEY_ID,
-          privateKey,
-          dateLessThan: new Date(
-            Date.now() + 1000 * 60 * 60 * 24
-          ).toISOString(),
-        };
-
-        const signedURL = getSignedUrl(params);
-        image.url = signedURL;
-      }
-
-      return res.status(200).json(images);
-    } catch (e) {
-      console.log(e);
-      return res
-        .status(500)
-        .json({ message: "unable to generate signed urls" });
-    }
-  } catch (e) {
-    return res.status(500).json({ message: "unable to get all images!" });
-  }
-});
+router.get("/:storeId/images", fetchImages);
 
 router.post(
   "/:storeId/upload",
