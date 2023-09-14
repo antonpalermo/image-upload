@@ -12,6 +12,10 @@ import checkImageBuffer from "../middlewares/check-image-buffer";
 
 import { generateFilename } from "../libs/generate-filename";
 import { fetchImages } from "../handlers/fetch-images";
+import { CloudFrontClient } from "@aws-sdk/client-cloudfront";
+
+import middleware from "../middlewares/images.middleware";
+import handler from "../handlers/images.handler";
 
 const router: Router = express.Router();
 
@@ -23,9 +27,22 @@ const s3Client = new S3Client({
   },
 });
 
+const cloudfrontClient = new CloudFrontClient({
+  credentials: {
+    accessKeyId: process.env.AWS_BUCKET_ACCESSKEY,
+    secretAccessKey: process.env.AWS_BUCKET_SECRETKEY!,
+  },
+});
+
 router.use(multer().single("image"));
 
 router.get("/:storeId/images", fetchImages);
+
+router.delete(
+  "/:storeId/image/:filename",
+  middleware.isFilenameExist,
+  handler.deleteImage
+);
 
 router.post(
   "/:storeId/upload",
