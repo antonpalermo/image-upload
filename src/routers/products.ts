@@ -7,15 +7,13 @@ import {
 } from "@aws-sdk/client-s3";
 
 import prisma from "../libs/prisma";
-import resizeImage from "../middlewares/resize-image";
-import checkImageBuffer from "../middlewares/check-image-buffer";
 
 import { generateFilename } from "../libs/generate-filename";
 import { fetchImages } from "../handlers/fetch-images";
 import { CloudFrontClient } from "@aws-sdk/client-cloudfront";
 
-import middleware from "../middlewares/images.middleware";
 import handler from "../handlers/images.handler";
+import middleware from "../middlewares/images.middleware";
 
 const router: Router = express.Router();
 
@@ -46,8 +44,8 @@ router.delete(
 
 router.post(
   "/:storeId/upload",
-  checkImageBuffer,
-  resizeImage,
+  middleware.checkImageBuffer,
+  middleware.resizeImage,
   async (req: Request, res: Response) => {
     try {
       const filename = generateFilename();
@@ -67,6 +65,7 @@ router.post(
       // return created status
       return res.status(201).json({ message: "image successfully uploaded." });
     } catch (e) {
+      console.log(e);
       return res
         .status(500)
         .json({ message: "unable to upload image to s3 bucket." });

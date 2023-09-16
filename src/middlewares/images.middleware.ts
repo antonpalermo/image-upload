@@ -1,10 +1,79 @@
+import { MulterError } from "multer";
 import { NextFunction, Request, Response } from "express";
-import prisma from "../libs/prisma";
+import { validateBufferMIMEType } from "validate-image-type";
 
+import sharp from "sharp";
+import prisma from "../libs/prisma";
 interface IncomingRequest extends Omit<Request, "params"> {
   params: {
     filename: string;
   };
+}
+
+async function checkImageBuffer(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  if (req.file) {
+    const isValid = await validateBufferMIMEType(req.file?.buffer, {
+      originalFilename: req.file.originalname,
+      allowMimeTypes: ["image/png", "image/jpeg"],
+    });
+
+    if (!isValid.ok) {
+      return res
+        .status(400)
+        .json({ message: "uploaded file is not a valid image" });
+    }
+  } else {
+    return res
+      .status(400)
+      .json({ message: "no file uploaded, please upload a file." });
+  }
+
+  next();
+}
+
+async function resizeImage(
+  req: IncomingRequest,
+  res: Response,
+  next: NextFunction
+) {
+  if (!req.file) {
+    throw new Error("req.file is not available");
+  }
+
+  try {
+    const processedImage = await sharp(req.file?.buffer)
+      .resize({
+        width: 1920,
+        height: 1080,
+        fit: "contain",
+      })
+      .toFormat("webp")
+      .toBuffer({
+        resolveWithObject: true,
+      });
+
+    req.file = {
+      ...req.file,
+      mimetype: "image/webp",
+      buffer: processedImage.data,
+      size: processedImage.info.size,
+    };
+  } catch (e) {
+    if (e instanceof MulterError) {
+      return res
+        .status(500)
+        .json({ message: "Multer error, unable to process uploaded image" });
+    }
+    return res.status(500).json({
+      message: "unable to process image",
+    });
+  }
+
+  next();
 }
 
 async function isFilenameExist(
@@ -33,4 +102,4 @@ async function isFilenameExist(
   }
 }
 
-export default { isFilenameExist };
+export default { resizeImage, checkImageBuffer, isFilenameExist };
