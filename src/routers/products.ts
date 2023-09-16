@@ -1,8 +1,6 @@
 import multer from "multer";
 import express, { Router } from "express";
 
-import { fetchImages } from "../handlers/fetch-images";
-
 import handler from "../handlers/images.handler";
 import middleware from "../middlewares/images.middleware";
 
@@ -10,7 +8,7 @@ const router: Router = express.Router();
 
 router.use(multer().single("image"));
 
-router.get("/:storeId/images", fetchImages);
+router.get("/:storeId/images", handler.getImages);
 
 router.delete(
   "/:storeId/image/:filename",

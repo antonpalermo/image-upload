@@ -9,6 +9,7 @@ import {
 import { CloudFrontClient } from "@aws-sdk/client-cloudfront";
 
 import prisma from "../libs/prisma";
+import getSignedUrl from "../libs/sign-image-url";
 
 import { generateFilename } from "../libs/generate-filename";
 import { deleteS3Object, invalidateCDNCache } from "../libs/helpers";
@@ -33,6 +34,23 @@ interface IncomingRequest extends Omit<Request, "params"> {
   params: {
     filename: string;
   };
+}
+
+async function getImages(_: IncomingRequest, res: Response) {
+  try {
+    // query all images.
+    const images = await prisma.images.findMany({
+      select: { name: true },
+    });
+    // mutate the array and return a generated signed cloudfront urls.
+    const signedImages = images.map((image) =>
+      getSignedUrl(`${process.env.CLOUDFRONT_ORIGIN}/${image.name}`)
+    );
+    // return the generated urls
+    return res.status(200).json(signedImages);
+  } catch (e) {
+    return res.status(500).json({ message: "Unable to get all images" });
+  }
 }
 
 async function uploadImage(req: IncomingRequest, res: Response) {
@@ -81,4 +99,4 @@ async function deleteImage(req: IncomingRequest, res: Response) {
   }
 }
 
-export default { deleteImage, uploadImage };
+export default { getImages, deleteImage, uploadImage };
