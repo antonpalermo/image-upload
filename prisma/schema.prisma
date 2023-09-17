@@ -12,6 +12,6 @@ datasource db {
 
 model Images {
   id          String   @id @default(uuid())
-  name        String
+  name        String   @unique
   dateCreated DateTime @default(now())
 }

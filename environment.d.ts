@@ -6,6 +6,10 @@ declare global {
       AWS_BUCKET_REGION: string;
       AWS_BUCKET_ACCESSKEY: string;
       AWS_BUCKET_SECRETKEY: string;
+      CLOUDFRONT_ORIGIN: string;
+      CLOUDFRONT_KEY_ID: string;
+      CLOUDFRONT_DIST_ID: string;
+      CLOUDFRONT_PRIVATE_KEY: string;
       NANO_ID: string;
       PORT?: number;
     }
