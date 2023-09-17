@@ -9,10 +9,9 @@ import {
 import { CloudFrontClient } from "@aws-sdk/client-cloudfront";
 
 import prisma from "../libs/prisma";
-import getSignedUrl from "../libs/sign-image-url";
+import helpers from "../libs/helpers";
 
 import { generateFilename } from "../libs/generate-filename";
-import { deleteS3Object, invalidateCDNCache } from "../libs/helpers";
 
 const s3Client = new S3Client({
   region: process.env.AWS_BUCKET_REGION,
@@ -44,7 +43,7 @@ async function getImages(_: IncomingRequest, res: Response) {
     });
     // mutate the array and return a generated signed cloudfront urls.
     const signedImages = images.map((image) =>
-      getSignedUrl(`${process.env.CLOUDFRONT_ORIGIN}/${image.name}`)
+      helpers.signUrl(`${process.env.CLOUDFRONT_ORIGIN}/${image.name}`)
     );
     // return the generated urls
     return res.status(200).json(signedImages);
@@ -55,22 +54,15 @@ async function getImages(_: IncomingRequest, res: Response) {
 
 async function uploadImage(req: IncomingRequest, res: Response) {
   try {
+    if (!req.file?.buffer) {
+      throw new Error("invalid file buffer");
+    }
+
     const filename = generateFilename();
     // store the filename assigned to the uploaded image
     await prisma.images.create({ data: { name: filename } });
 
-    // setup s3 upload parameters
-    const params: PutObjectCommandInput = {
-      Bucket: process.env.AWS_BUCKET_NAME,
-      Key: filename,
-      Body: req.file?.buffer,
-      ContentType: "image/webp",
-    };
-
-    // create a new put object command
-    const uploadCommand = new PutObjectCommand(params);
-    // send upload command to s3
-    await s3Client.send(uploadCommand);
+    await helpers.putS3Object(s3Client, filename, req.file?.buffer);
     // return created status
     return res.status(201).json({ message: "image successfully uploaded." });
   } catch (e) {
@@ -85,8 +77,8 @@ async function deleteImage(req: IncomingRequest, res: Response) {
   try {
     const filename = req.params.filename;
 
-    await invalidateCDNCache(cloudfrontClient, filename);
-    await deleteS3Object(s3Client, filename);
+    await helpers.invalidateCDNCache(cloudfrontClient, filename);
+    await helpers.deleteS3Object(s3Client, filename);
     await prisma.images.delete({ where: { name: filename } });
 
     return res
