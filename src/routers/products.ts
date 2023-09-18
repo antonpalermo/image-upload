@@ -8,7 +8,9 @@ const router: Router = express.Router();
 
 router.use(multer().single("image"));
 
-router.get("/:storeId/images", handler.getImages);
+router
+  .get("/:storeId/images", handler.getImages)
+  .get("/:storeId/images/:filename", handler.getImage);
 
 router.delete(
   "/:storeId/image/:filename",

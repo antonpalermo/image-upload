@@ -35,6 +35,26 @@ interface IncomingRequest extends Omit<Request, "params"> {
   };
 }
 
+async function getImage(req: IncomingRequest, res: Response) {
+  try {
+    const filename = req.params.filename;
+    if (!filename) {
+      res.status(400).json({ message: "filename is required" });
+    }
+    const image = await prisma.images.findUnique({ where: { name: filename } });
+
+    if (!image) {
+      return res.status(404).json({ message: "file not found" });
+    }
+
+    return res.status(200).json({
+      url: helpers.signUrl(`${process.env.CLOUDFRONT_ORIGIN}/${image.name}`),
+    });
+  } catch (e) {
+    return res.status(500).json({ message: "Unable to get image" });
+  }
+}
+
 async function getImages(_: IncomingRequest, res: Response) {
   try {
     // query all images.
@@ -91,4 +111,4 @@ async function deleteImage(req: IncomingRequest, res: Response) {
   }
 }
 
-export default { getImages, deleteImage, uploadImage };
+export default { getImages, getImage, deleteImage, uploadImage };
