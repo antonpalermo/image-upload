@@ -38,17 +38,13 @@ interface IncomingRequest extends Omit<Request, "params"> {
 async function getImage(req: IncomingRequest, res: Response) {
   try {
     const filename = req.params.filename;
+
     if (!filename) {
       res.status(400).json({ message: "filename is required" });
     }
-    const image = await prisma.images.findUnique({ where: { name: filename } });
-
-    if (!image) {
-      return res.status(404).json({ message: "file not found" });
-    }
 
     return res.status(200).json({
-      url: helpers.signUrl(`${process.env.CLOUDFRONT_ORIGIN}/${image.name}`),
+      url: helpers.signUrl(`${process.env.CLOUDFRONT_ORIGIN}/${filename}`),
     });
   } catch (e) {
     return res.status(500).json({ message: "Unable to get image" });

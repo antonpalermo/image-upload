@@ -10,7 +10,11 @@ router.use(multer().single("image"));
 
 router
   .get("/:storeId/images", handler.getImages)
-  .get("/:storeId/images/:filename", handler.getImage);
+  .get(
+    "/:storeId/images/:filename",
+    middleware.isFilenameExist,
+    handler.getImage
+  );
 
 router.delete(
   "/:storeId/image/:filename",
