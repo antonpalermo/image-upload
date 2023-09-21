@@ -4,11 +4,12 @@ import { validateBufferMIMEType } from "validate-image-type";
 
 import sharp from "sharp";
 import prisma from "../libs/prisma";
+import helpers from "../libs/helpers";
+
 interface IncomingRequest extends Omit<Request, "params"> {
   params: {
     filename: string;
   };
-  // files?: Express.Multer.File[];
 }
 
 async function checkImageBuffer(
@@ -108,10 +109,14 @@ async function validateBufferArray(
   res: Response,
   next: NextFunction
 ) {
-  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+  const files = req.files as Express.Multer.File[];
 
-  if (!req.files) {
+  if (!files) {
     return res.status(400).json({ message: "invalid request" });
+  }
+
+  for (const file of files) {
+    await helpers.validateBufferProperties(file);
   }
 
   next();
