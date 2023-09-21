@@ -6,7 +6,7 @@ import middleware from "../middlewares/images.middleware";
 
 const router: Router = express.Router();
 
-router.use(multer().single("image"));
+router.use(multer().array("image"));
 
 router
   .get("/:storeId/images", handler.getImages)
@@ -22,11 +22,19 @@ router.delete(
   handler.deleteImage
 );
 
-router.post(
-  "/:storeId/upload",
-  middleware.checkImageBuffer,
-  middleware.resizeImage,
-  handler.uploadImage
-);
+router
+  .post(
+    "/:storeId/upload",
+    middleware.checkImageBuffer,
+    middleware.resizeImage,
+    handler.uploadImage
+  )
+  .post(
+    "/:storeId/multi/upload",
+    middleware.validateBufferArray,
+    (req, res) => {
+      return res.status(200).json({ message: "ok" });
+    }
+  );
 
 export default router;

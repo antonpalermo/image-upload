@@ -107,4 +107,8 @@ async function deleteImage(req: IncomingRequest, res: Response) {
   }
 }
 
-export default { getImages, getImage, deleteImage, uploadImage };
+async function putObject(req: Response, res: Response) {
+  return res.status(200).json({ message: "ok" });
+}
+
+export default { getImages, getImage, deleteImage, uploadImage, putObject };

@@ -11,6 +11,7 @@ import {
 import { CloudfrontSignInput, getSignedUrl } from "@aws-sdk/cloudfront-signer";
 
 import { Buffer } from "node:buffer";
+import { validateBufferMIMEType } from "validate-image-type";
 
 /**
  * conver base64 encoded string content to ascii encoding
@@ -88,9 +89,26 @@ async function deleteS3Object(client: S3Client, filename: string) {
   }
 }
 
+async function validateBufferProperties(buffer: Buffer) {
+  try {
+    const isValid = await validateBufferMIMEType(buffer, {
+      allowMimeTypes: ["image/png", "image/jpg"],
+    });
+
+    if (!isValid) {
+      throw new Error("The provided buffer is not a valid image");
+    }
+
+    return buffer;
+  } catch (e) {
+    console.log(e);
+  }
+}
+
 export default {
   signUrl,
   putS3Object,
   deleteS3Object,
   invalidateCDNCache,
+  validateBufferProperties,
 };

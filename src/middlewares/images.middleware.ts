@@ -8,6 +8,7 @@ interface IncomingRequest extends Omit<Request, "params"> {
   params: {
     filename: string;
   };
+  // files?: Express.Multer.File[];
 }
 
 async function checkImageBuffer(
@@ -102,4 +103,23 @@ async function isFilenameExist(
   }
 }
 
-export default { resizeImage, checkImageBuffer, isFilenameExist };
+async function validateBufferArray(
+  req: IncomingRequest,
+  res: Response,
+  next: NextFunction
+) {
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+  if (!req.files) {
+    return res.status(400).json({ message: "invalid request" });
+  }
+
+  next();
+}
+
+export default {
+  resizeImage,
+  checkImageBuffer,
+  isFilenameExist,
+  validateBufferArray,
+};
