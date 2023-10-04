@@ -11,6 +11,10 @@ import {
 import { CloudfrontSignInput, getSignedUrl } from "@aws-sdk/cloudfront-signer";
 
 import { Buffer } from "node:buffer";
+import {
+  ValidateImageResult,
+  validateBufferMIMEType,
+} from "validate-image-type";
 
 /**
  * conver base64 encoded string content to ascii encoding
@@ -88,9 +92,26 @@ async function deleteS3Object(client: S3Client, filename: string) {
   }
 }
 
+async function validateBufferProperties(file: Express.Multer.File) {
+  try {
+    const bufferResult = await validateBufferMIMEType(file.buffer, {
+      originalFilename: file.originalname,
+      allowMimeTypes: ["image/png", "image/jpg"],
+    });
+
+    if (!bufferResult.ok) {
+      throw new Error(bufferResult.error?.message);
+    }
+    // TODO: do something here that will ingnore the invalid mime type
+  } catch (e) {
+    console.log(e);
+  }
+}
+
 export default {
   signUrl,
   putS3Object,
   deleteS3Object,
   invalidateCDNCache,
+  validateBufferProperties,
 };

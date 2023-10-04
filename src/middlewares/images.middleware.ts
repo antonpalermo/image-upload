@@ -4,6 +4,8 @@ import { validateBufferMIMEType } from "validate-image-type";
 
 import sharp from "sharp";
 import prisma from "../libs/prisma";
+import helpers from "../libs/helpers";
+
 interface IncomingRequest extends Omit<Request, "params"> {
   params: {
     filename: string;
@@ -102,4 +104,27 @@ async function isFilenameExist(
   }
 }
 
-export default { resizeImage, checkImageBuffer, isFilenameExist };
+async function validateBufferArray(
+  req: IncomingRequest,
+  res: Response,
+  next: NextFunction
+) {
+  const files = req.files as Express.Multer.File[];
+
+  if (!files) {
+    return res.status(400).json({ message: "invalid request" });
+  }
+
+  for (const file of files) {
+    await helpers.validateBufferProperties(file);
+  }
+
+  next();
+}
+
+export default {
+  resizeImage,
+  checkImageBuffer,
+  isFilenameExist,
+  validateBufferArray,
+};
